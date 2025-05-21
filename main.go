@@ -101,9 +101,9 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	var commandExecutionStatus string
-	err := executeCommand(userCommand)
+	output, err := executeCommand(userCommand)
 	if err == nil {
-		commandExecutionStatus = fmt.Sprintf("comando %s ejecutado correctamente", commandToken)
+		commandExecutionStatus = fmt.Sprintf("comando %s ejecutado correctamente\n [%s]", commandToken, output)
 	} else {
 		commandExecutionStatus = "Error en la ejecucion: `" + err.Error() + "`"
 	}
@@ -123,17 +123,20 @@ func isDiscordUserAllowed(userId string) bool {
 	return isAllowed
 }
 
-func executeCommand(command ServerCommand) error {
+func executeCommand(command ServerCommand) (string, error) {
+	supervisorctlPath := "/usr/bin/supervisorctl"
+	supervisorQuakeliveServer := "quakelive:q3server_0"
+
 	switch command {
 	case RebootServer:
 		{
-			cmd := exec.Command("", `javascript:alert("Messagentoo!");close();`)
-			_, err := cmd.Output()
+			cmd := exec.Command(supervisorctlPath, "restart", supervisorQuakeliveServer)
+			output, err := cmd.Output()
 			if err != nil {
-				return err
+				return "", err
 			}
-			return nil
+			return string(output), nil
 		}
 	}
-	return nil
+	return "", fmt.Errorf("command not implemented")
 }
